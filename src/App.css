@@ -1,0 +1,30 @@
+* {
+    margin: 0;
+    padding: 0;
+  }
+  html{
+    overflow-x: hidden;
+  }
+  @font-face {
+    font-family: roboto_cbold;
+    src: url('fonts/RobotoCondensed-Bold.ttf');
+  }
+  .roboto_cbold {
+    font-family: roboto_cbold;
+  }
+  @font-face {
+    font-family: roboto_cregular;
+    src: url('fonts/RobotoCondensed-Regular.ttf');
+  }
+  .roboto_cregular {
+    font-family: roboto_cregular;
+    font-weight: 100;
+  }
+
+  @font-face {
+    font-family: roboto_clight;
+    src: url('fonts/RobotoCondensed-Light.ttf')
+  }
+  .roboto_clight{
+    font-family: roboto_clight ;
+  }
