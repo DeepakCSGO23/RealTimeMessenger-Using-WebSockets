@@ -6,11 +6,12 @@ function App() {
   const fileInputRef = useRef(null);
   const wsRef = useRef(null);
   const [allReceivedMessages, setAllReceivedMessages] = useState([]);
-
+  const [attachedFileMetaData, setAttachedFileMetaData] = useState(null);
   useEffect(() => {
-    wsRef.current = new WebSocket("wss://192.168.0.106:5000");
+    wsRef.current = new WebSocket(
+      `wss://${import.meta.env.VITE_WEB_SOCKET_SERVER}`
+    );
     wsRef.current.binaryType = "arraybuffer";
-
     wsRef.current.onmessage = (e) => {
       const message = JSON.parse(e.data);
       if (message.type === "text") {
@@ -24,7 +25,12 @@ function App() {
         const imageUrl = URL.createObjectURL(blob);
         setAllReceivedMessages((prev) => [
           ...prev,
-          { type: "file", data: imageUrl, timeStamp: message.timeStamp },
+          {
+            type: message.type,
+            data: imageUrl,
+            fileName: message.fileName,
+            timeStamp: message.timeStamp,
+          },
         ]);
       }
     };
@@ -48,7 +54,8 @@ function App() {
     }
   };
 
-  const handleSendingFile = (e) => {
+  const handleAttachingFileToMessage = (e) => {
+    console.log("hgere");
     const file = fileInputRef.current.files[0];
     console.log(file);
     if (file) {
@@ -64,22 +71,36 @@ function App() {
             hour12: true,
           }),
         });
-        wsRef.current.send(message);
+        setAttachedFileMetaData({
+          type: file.type,
+          fileName: file.name,
+          data: base64Data,
+          timeStamp: new Date().toLocaleString("en-IN", {
+            hour12: true,
+          }),
+        });
+        // wsRef.current.send(message);
       };
       fileReader.readAsArrayBuffer(file);
     }
   };
-
+  console.log(attachedFileMetaData);
   return (
     <div className="h-screen w-screen flex flex-col space-y-20 items-center justify-center bg-black/80 text-white roboto_cregular">
       <h1 className="roboto_cbold tracking-widest text-6xl">REAL TALK</h1>
       <div className="flex flex-col items-center space-y-10">
-        <input
-          onKeyDown={handleKeyPress}
-          ref={messageRef}
-          type="text"
-          className="text-black p-4 rounded-3xl"
-        />
+        <div className="flex space-x-4 items-center">
+          <input
+            onKeyDown={handleKeyPress}
+            ref={messageRef}
+            type="text"
+            className="text-black p-4 rounded-3xl"
+          />
+          {attachedFileMetaData && (
+            <span className="">{attachedFileMetaData.fileName}</span>
+          )}
+        </div>
+
         <div className="flex items-center space-x-4">
           <label htmlFor="attachfile">
             <svg
@@ -100,7 +121,7 @@ function App() {
             </svg>
           </label>
           <input
-            onChange={handleSendingFile}
+            onChange={handleAttachingFileToMessage}
             ref={fileInputRef}
             className="w-0"
             type="file"
@@ -114,17 +135,17 @@ function App() {
           </button>
         </div>
       </div>
-      <div className="flex flex-col border-2 rounded-3xl min-h-40 w-96 divide-y-2 divide-gray-400">
+      <div className="flex flex-col border-2 rounded-3xl min-h-40 min-w-96 divide-y-2 divide-gray-400">
         {allReceivedMessages.map((message, index) => (
           <div className="flex items-center justify-between p-4" key={index}>
-            {console.log(message)}
             {message.type === "text" ? (
               <h1>{message.data}</h1>
-            ) : (
-              <a href={message.data} download="test">
-                File
+            ) : message.type === "application/pdf" ? (
+              <a href={message.data} download={message.fileName}>
+                {message.fileName}
               </a>
-              // <a src={message.data} alt="file" height="50" width="50" />
+            ) : (
+              <img src={message.data} alt="image" height="50" width="50" />
             )}
             <span className="text-gray-400 text-xs">{message.timeStamp}</span>
           </div>
